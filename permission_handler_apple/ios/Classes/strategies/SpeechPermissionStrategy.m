@@ -16,7 +16,7 @@
     completionHandler(ServiceStatusNotApplicable);
 }
 
-- (void)requestPermission:(PermissionGroup)permission completionHandler:(PermissionStatusHandler)completionHandler {
+- (void)requestPermission:(PermissionGroup)permission completionHandler:(PermissionStatusHandler)completionHandler errorHandler:(PermissionErrorHandler)errorHandler {
     PermissionStatus status = [self checkPermissionStatus:permission];
     
     if (status != PermissionStatusDenied) {
@@ -24,23 +24,15 @@
         return;
     }
     
-    if (@available(iOS 10.0, *)) {
-        [SFSpeechRecognizer requestAuthorization:^(SFSpeechRecognizerAuthorizationStatus authorizationStatus) {
-            completionHandler([SpeechPermissionStrategy determinePermissionStatus:authorizationStatus]);
-        }];
-    } else {
-        completionHandler(PermissionStatusDenied);
-    }
+    [SFSpeechRecognizer requestAuthorization:^(SFSpeechRecognizerAuthorizationStatus authorizationStatus) {
+        completionHandler([SpeechPermissionStrategy determinePermissionStatus:authorizationStatus]);
+    }];
 }
 
 + (PermissionStatus)permissionStatus {
-    if (@available(iOS 10.0, *)) {
-        SFSpeechRecognizerAuthorizationStatus status = [SFSpeechRecognizer authorizationStatus];
-        
-        return [SpeechPermissionStrategy determinePermissionStatus:status];
-    }
+    SFSpeechRecognizerAuthorizationStatus status = [SFSpeechRecognizer authorizationStatus];
     
-    return PermissionStatusDenied;
+    return [SpeechPermissionStrategy determinePermissionStatus:status];
 }
 
 + (PermissionStatus)determinePermissionStatus:(SFSpeechRecognizerAuthorizationStatus)authorizationStatus  API_AVAILABLE(ios(10.0)){

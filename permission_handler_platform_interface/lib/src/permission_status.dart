@@ -1,4 +1,4 @@
-part of permission_handler_platform_interface;
+part of '../permission_handler_platform_interface.dart';
 
 /// Defines the state of a [Permission].
 enum PermissionStatus {
@@ -19,7 +19,7 @@ enum PermissionStatus {
   /// The user has authorized this application for limited access. So far this
   /// is only relevant for the Photo Library picker.
   ///
-  /// *Only supported on iOS (iOS14+).*
+  /// *Only supported on iOS (iOS14+) and Android (Android 14+)*
   limited,
 
   /// Permission to the requested feature is permanently denied, the permission
@@ -60,8 +60,6 @@ extension PermissionStatusValue on PermissionStatus {
         return 4;
       case PermissionStatus.provisional:
         return 5;
-      default:
-        throw UnimplementedError();
     }
   }
 

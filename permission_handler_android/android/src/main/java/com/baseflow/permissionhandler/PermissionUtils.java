@@ -1,6 +1,7 @@
 package com.baseflow.permissionhandler;
 
 import android.Manifest;
+import android.annotation.TargetApi;
 import android.app.Activity;
 import android.content.Context;
 import android.content.SharedPreferences;
@@ -99,6 +100,7 @@ public class PermissionUtils {
         }
     }
 
+    @TargetApi(22)
     static List<String> getManifestNames(Context context, @PermissionConstants.PermissionGroup int permission) {
         final ArrayList<String> permissionNames = new ArrayList<>();
 
@@ -348,9 +350,8 @@ public class PermissionUtils {
                     permissionNames.add(Manifest.permission.READ_MEDIA_AUDIO);
                 break;
             case PermissionConstants.PERMISSION_GROUP_SCHEDULE_EXACT_ALARM:
-                // The SCHEDULE_EXACT_ALARM permission is introduced in Android S, meaning we should
-                // not handle permissions on pre Android S devices.
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S && hasPermissionInManifest(context, permissionNames, Manifest.permission.SCHEDULE_EXACT_ALARM))
+                // The SCHEDULE_EXACT_ALARM permission is introduced in Android S, before Android 31 it should alway return Granted
+                if (hasPermissionInManifest(context, permissionNames, Manifest.permission.SCHEDULE_EXACT_ALARM))
                     permissionNames.add(Manifest.permission.SCHEDULE_EXACT_ALARM);
                 break;
             case PermissionConstants.PERMISSION_GROUP_MEDIA_LIBRARY:

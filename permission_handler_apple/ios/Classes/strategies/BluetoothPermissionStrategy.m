@@ -61,16 +61,11 @@
 }
 
 - (void)handleCheckServiceStatusCallback:(CBCentralManager *)centralManager {
-    if (@available(iOS 10, *)) {
-        ServiceStatus serviceStatus = [centralManager state] == CBManagerStatePoweredOn ? ServiceStatusEnabled : ServiceStatusDisabled;
-        _serviceStatusHandler(serviceStatus);
-    }
-    #pragma clang diagnostic ignored "-Wdeprecated-declarations"
-    ServiceStatus serviceStatus = [centralManager state] == CBCentralManagerStatePoweredOn ? ServiceStatusEnabled : ServiceStatusDisabled;
+    ServiceStatus serviceStatus = [centralManager state] == CBManagerStatePoweredOn ? ServiceStatusEnabled : ServiceStatusDisabled;
     _serviceStatusHandler(serviceStatus);
 }
 
-- (void)requestPermission:(PermissionGroup)permission completionHandler:(PermissionStatusHandler)completionHandler {
+- (void)requestPermission:(PermissionGroup)permission completionHandler:(PermissionStatusHandler)completionHandler errorHandler:(PermissionErrorHandler)errorHandler {
     [self initManagerIfNeeded];
     PermissionStatus status = [self checkPermissionStatus:permission];
     

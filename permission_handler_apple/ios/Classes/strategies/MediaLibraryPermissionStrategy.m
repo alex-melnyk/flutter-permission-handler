@@ -17,31 +17,22 @@
     completionHandler(ServiceStatusNotApplicable);
 }
 
-- (void)requestPermission:(PermissionGroup)permission completionHandler:(PermissionStatusHandler)completionHandler {
+- (void)requestPermission:(PermissionGroup)permission completionHandler:(PermissionStatusHandler)completionHandler errorHandler:(PermissionErrorHandler)errorHandler {
     PermissionStatus status = [self checkPermissionStatus:permission];
     if (status != PermissionStatusDenied) {
         completionHandler(status);
         return;
     }
 
-    if (@available(iOS 9.3, *)) {
-        [MPMediaLibrary requestAuthorization:^(MPMediaLibraryAuthorizationStatus status) {
-            completionHandler([MediaLibraryPermissionStrategy determinePermissionStatus:status]);
-        }];
-    } else {
-        completionHandler(PermissionStatusPermanentlyDenied);
-        return;
-    }
+    [MPMediaLibrary requestAuthorization:^(MPMediaLibraryAuthorizationStatus status) {
+        completionHandler([MediaLibraryPermissionStrategy determinePermissionStatus:status]);
+    }];
 }
 
 + (PermissionStatus)permissionStatus {
-    if (@available(iOS 9.3, *)) {
-        MPMediaLibraryAuthorizationStatus status = [MPMediaLibrary authorizationStatus];
+    MPMediaLibraryAuthorizationStatus status = [MPMediaLibrary authorizationStatus];
 
-        return [MediaLibraryPermissionStrategy determinePermissionStatus:status];
-    }
-
-    return PermissionStatusDenied;
+    return [MediaLibraryPermissionStrategy determinePermissionStatus:status];
 }
 
 + (PermissionStatus)determinePermissionStatus:(MPMediaLibraryAuthorizationStatus)authorizationStatus  API_AVAILABLE(ios(9.3)){

@@ -39,7 +39,7 @@
     }];
 }
 
-- (void)requestPermissions:(NSArray *)permissions completion:(PermissionRequestCompletion)completion {
+- (void)requestPermissions:(NSArray *)permissions completion:(PermissionRequestCompletion)completion errorHandler:(PermissionErrorHandler)errorHandler {
     NSMutableDictionary *permissionStatusResult = [[NSMutableDictionary alloc] init];
 
     if (permissions.count == 0) {
@@ -57,42 +57,34 @@
         __block id <PermissionStrategy> permissionStrategy = [PermissionManager createPermissionStrategy:permission];
         [_strategyInstances addObject:permissionStrategy];
         
-        
         [permissionStrategy requestPermission:permission completionHandler:^(PermissionStatus permissionStatus) {
             permissionStatusResult[@(permission)] = @(permissionStatus);
             [requestQueue removeObject:@(permission)];
-            
+                
             [self->_strategyInstances removeObject:permissionStrategy];
-            
+                
             if (requestQueue.count == 0) {
                 completion(permissionStatusResult);
             }
-          
+                
             // Make sure `completion` is called before cleaning up the reference
             // otherwise the `completion` block is also dereferenced on iOS 12 and
             // below (this is most likely a bug in Objective-C which is solved in
             // later versions of the runtime).
+            permissionStrategy = nil;
+        } errorHandler: ^(NSString* errorCode, NSString* errorDesciption) {
+            errorHandler(errorCode, errorDesciption);
             permissionStrategy = nil;
         }];
     }
 }
 
 + (void)openAppSettings:(FlutterResult)result {
-    if (@available(iOS 10, *)) {
-        [[UIApplication sharedApplication] openURL:[NSURL URLWithString:UIApplicationOpenSettingsURLString]
-                                           options:[[NSDictionary alloc] init]
-                                 completionHandler:^(BOOL success) {
-                                     result([[NSNumber alloc] initWithBool:success]);
-                                 }];
-    } else if (@available(iOS 8.0, *)) {
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wdeprecated-declarations"
-        BOOL success = [[UIApplication sharedApplication] openURL:[NSURL URLWithString:UIApplicationOpenSettingsURLString]];
-        result([[NSNumber alloc] initWithBool:success]);
-#pragma clang diagnostic pop
-    } else {
-        result(@false);    
-    }
+    [[UIApplication sharedApplication] openURL:[NSURL URLWithString:UIApplicationOpenSettingsURLString]
+                                       options:[[NSDictionary alloc] init]
+                             completionHandler:^(BOOL success) {
+                                 result([[NSNumber alloc] initWithBool:success]);
+                             }];
 }
 
 + (id)createPermissionStrategy:(PermissionGroup)permission {
@@ -108,7 +100,7 @@
         case PermissionGroupLocation:
         case PermissionGroupLocationAlways:
         case PermissionGroupLocationWhenInUse:
-            #if PERMISSION_LOCATION
+            #if PERMISSION_LOCATION || PERMISSION_LOCATION_WHENINUSE || PERMISSION_LOCATION_ALWAYS
             return [[LocationPermissionStrategy alloc] initWithLocationManager];
             #else
             return [LocationPermissionStrategy new];
@@ -149,6 +141,8 @@
             return [CriticalAlertsPermissionStrategy new];
         case PermissionGroupAssistant:
             return [AssistantPermissionStrategy new];
+        case PermissionGroupBackgroundRefresh:
+            return [BackgroundRefreshStrategy new];
         default:
             return [UnknownPermissionStrategy new];
     }
